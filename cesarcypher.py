@@ -9,7 +9,7 @@ def get_json(url):
     
 def save_json_to_file(json_returned, file_path):
     try:
-        with open(file_path, 'w') as outfile:  
+        with open(file_path, "w") as outfile:  
             json.dump(json_returned, outfile, indent=1)
         outfile.close()
     except:
@@ -60,24 +60,30 @@ def generate_sha1(decyphered_message):
         return 1
     return result_sha1.hexdigest()
 
-def send_result_to_codenation(url_post):
-    pass
-
+def send_result_to_codenation(url_post, file_path):
+    try:
+        files = {"answer": open(file_path, "rb")}
+        request_return = requests.post(url = url_post, files = files)
+        if(request_return.status_code == 200):
+            print("Answer successfully sent!\n{}".format(request_return._content))
+        else:
+            print(requests.Request('POST', url_post, files=files).prepare().body.decode('utf8'))
+    except:
+        print("Oooops! Problems while trying to send the file.\n{}".format(sys.exc_info()[0]))
+        return 1
+    return 0
+    
 if __name__ == "__main__":
     url_get = "https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token=12818de9bd8ad7cba554de3c9e391a3363311a6f"
     url_post = "https://api.codenation.dev/v1/challenge/dev-ps/submit-solution?token=12818de9bd8ad7cba554de3c9e391a3363311a6f"
     file_path = "answer.json"
     letters_mapping = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
     json_returned = get_json(url_get)
-    if(isinstance(json_returned,dict)):
-        if(save_json_to_file(json_returned, file_path) == 0):
-            decyphered_message = decypher_message(json_returned["numero_casas"], json_returned["cifrado"], letters_mapping)
-            loaded_json = read_file(file_path)
-            update_json(loaded_json, "decifrado", decyphered_message)
-            sha1_message = generate_sha1(decyphered_message)
-            loaded_json = read_file(file_path)
-            update_json(loaded_json, "resumo_criptografico", sha1_message)
-        else:
-            print("Error while trying to save the JSON file")
-    else:
-        print("Oooops! Error while trying to get the JSON")
+    save_json_to_file(json_returned, file_path)
+    decyphered_message = decypher_message(json_returned["numero_casas"], json_returned["cifrado"], letters_mapping)
+    loaded_json = read_file(file_path)
+    update_json(loaded_json, "decifrado", decyphered_message)
+    sha1_message = generate_sha1(decyphered_message)
+    loaded_json = read_file(file_path)
+    update_json(loaded_json, "resumo_criptografico", sha1_message)
+    send_result_to_codenation(url_post, file_path)
