@@ -69,7 +69,7 @@ def send_result_to_codenation(url_post, file_path):
         else:
             print(requests.Request('POST', url_post, files=files).prepare().body.decode('utf8'))
     except:
-        print("Oooops! Problems while trying to send the file.\n{}".format(sys.exc_info()[0]))
+        print("Oooops! Problems while trying to send the file to codenation.\n{}".format(sys.exc_info()[0]))
         return 1
     return 0
     
