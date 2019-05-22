@@ -17,11 +17,18 @@ def save_json_to_file(json_returned, file_path):
         return 1
     return 0
 
-def update_json(file_path, field, text):
+def read_file(file_path):
     try:
         with open(file_path) as json_file:  
-            loaded_json = json.load(json_file)        
+            loaded_json = json.load(json_file)      
         json_file.close()
+    except:
+        print("Oooops! Problems while trying to load the JSON file.\n{}".format(sys.exc_info()[0]))
+        return 1
+    return loaded_json
+
+def update_json(loaded_json, field, text):
+    try:    
         loaded_json[field] = text
         save_json_to_file(loaded_json, file_path)
     except:
@@ -53,6 +60,9 @@ def generate_sha1(decyphered_message):
         return 1
     return result_sha1.hexdigest()
 
+def send_result_to_codenation(url_post):
+    pass
+
 if __name__ == "__main__":
     url_get = "https://api.codenation.dev/v1/challenge/dev-ps/generate-data?token=12818de9bd8ad7cba554de3c9e391a3363311a6f"
     url_post = "https://api.codenation.dev/v1/challenge/dev-ps/submit-solution?token=12818de9bd8ad7cba554de3c9e391a3363311a6f"
@@ -62,10 +72,11 @@ if __name__ == "__main__":
     if(isinstance(json_returned,dict)):
         if(save_json_to_file(json_returned, file_path) == 0):
             decyphered_message = decypher_message(json_returned["numero_casas"], json_returned["cifrado"], letters_mapping)
-            update_json(file_path, "decifrado", decyphered_message)
-            generate_sha1(decyphered_message)
+            loaded_json = read_file(file_path)
+            update_json(loaded_json, "decifrado", decyphered_message)
             sha1_message = generate_sha1(decyphered_message)
-            update_json(file_path, "resumo_criptografico", sha1_message)
+            loaded_json = read_file(file_path)
+            update_json(loaded_json, "resumo_criptografico", sha1_message)
         else:
             print("Error while trying to save the JSON file")
     else:
